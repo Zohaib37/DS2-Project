@@ -123,6 +123,117 @@ public:
     }
 };
 
+class QuadraticProbing
+{
+private:
+    static const int table_size = 389; // Size of the hash table
+    std::string country_names[table_size];
+    std::string life_expectancy[table_size];
+
+public:
+    QuadraticProbing()
+    {
+        // Initialize arrays with dummy data
+        for (int i = 0; i < table_size; i++)
+        {
+            country_names[i] = ",";
+            life_expectancy[i] = ",";
+        }
+    }
+
+    int hash_function(const std::string &country_name)
+    {
+        int index = 0;
+        for (char c : country_name)
+        {
+            char lower_case = tolower(c);
+            index += lower_case;
+        }
+        return index % table_size;
+    }
+
+    int collision_resolution(int index, int attempt)
+    {
+        // Quadratic probing: increment attempt by its square
+        return (index + attempt * attempt) % table_size;
+    }
+
+    void hash_country()
+    {
+        std::ifstream file("Clean File.csv");
+        std::string line;
+        while (getline(file, line))
+        {
+            std::stringstream ss(line);
+            std::string token, country, expectancy;
+            int column = 0;
+            while (getline(ss, token, ','))
+            {
+                if (column == 0)
+                {
+                    country = token;
+                }
+                else if (column == 3)
+                {
+                    expectancy = token;
+                }
+                column++;
+            }
+            int index = hash_function(country);
+            int attempt = 0;
+
+            // Collision resolution
+            while (country_names[index] != ",")
+            {
+                attempt++;
+                index = collision_resolution(index, attempt);
+            }
+
+            // Store data in hash table
+            country_names[index] = country;
+            life_expectancy[index] = expectancy;
+        }
+    }
+
+    std::string find(const std::string &country_name)
+    {
+        int index = hash_function(country_name);
+        int attempt = 0;
+
+        // Search for the country
+        while (country_names[index] != country_name && country_names[index] != ",")
+        {
+            attempt++;
+            index = collision_resolution(index, attempt);
+        }
+
+        if (country_names[index] == country_name)
+        {
+            return life_expectancy[index];
+        }
+        else
+        {
+            return "0"; // Not found
+        }
+    }
+
+    void print()
+    {
+        for (int i = 0; i < table_size; i++)
+        {
+            std::cout << country_names[i] << '\n';
+        }
+    }
+
+    void string_lower(std::string &country)
+    {
+        for (char &c : country)
+        {
+            c = std::tolower(c);
+        }
+    }
+};
+
 int main()
 {
     // put relevant data in a new file
@@ -167,5 +278,22 @@ int main()
         std::cout << return_value;
     }
     // lp.print();
+
+    QuadraticProbing qp;
+    qp.hash_country();
+    //std::string country;
+    std::cout << "Enter Country Name: ";
+    std::cin >> country;
+    qp.string_lower(country);
+    //std::string return_value = qp.find(country);
+
+    if (return_value == "0")
+    {
+        std::cout << "Invalid Country Name" << '\n';
+    }
+    else
+    {
+        std::cout << return_value;
+    }
     
 }
