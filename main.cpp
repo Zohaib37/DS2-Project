@@ -2,7 +2,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-
+#include <chrono>
 class LinearProbing
 {
 private:
@@ -190,6 +190,7 @@ public:
             }
 
             // Store data in hash table
+            string_lower(country);
             country_names[index] = country;
             life_expectancy[index] = expectancy;
         }
@@ -261,6 +262,9 @@ int main()
         }
     }
 
+    // start measuring time for linear probing
+    auto start = std::chrono::steady_clock::now();
+
     LinearProbing lp;
     lp.hash_country();
     std::string country;
@@ -269,23 +273,31 @@ int main()
     lp.string_lower(country);
     std::string return_value = lp.find(country, 389);
 
+    // end measuring time for linear probing and calculate the duration between start and end
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> duration_linear = end - start;
+
     if (return_value == "0")
     {
         std::cout << "Invalid Country Name" << '\n';
     }
     else
     {
-        std::cout << return_value;
+        std::cout << "With Linear Probing: " << return_value << '\n';
     }
-    // lp.print();
+    std::cout << "Linear Probing time: " << duration_linear.count() << " seconds" << std::endl;
+
+    // start measuring time for quadratic probing
+    start = std::chrono::steady_clock::now();
 
     QuadraticProbing qp;
     qp.hash_country();
-    //std::string country;
-    std::cout << "Enter Country Name: ";
-    std::cin >> country;
     qp.string_lower(country);
-    //std::string return_value = qp.find(country);
+    return_value = qp.find(country);
+
+    // end measuring time for quadratic probing and calculate the duration between start and end
+    end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> duration_quadratic = end - start;
 
     if (return_value == "0")
     {
@@ -293,7 +305,9 @@ int main()
     }
     else
     {
-        std::cout << return_value;
+        std::cout << "With Quadratic Probing: " << return_value << '\n';
     }
+
+    std::cout << "Quadratic Probing time: " << duration_quadratic.count() << " seconds" << std::endl;
     
 }
