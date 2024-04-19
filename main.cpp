@@ -3,24 +3,26 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <vector>
 class LinearProbing
 {
 private:
     // create two hash tables for storing country names and their corresponding life expectancy value
-    // 389 size chosen because this is the next prime number after doubling the size of dataset
-    std::string country_names[389];
-    std::string life_expectancy[389];
+    std::vector<std::string> country_names;
+    std::vector<std::string> life_expectancy;
+    int size = 193;
+
 public:
     LinearProbing()
     {
         // populate both tables with dummy data
-        for (int i = 0; i < 389; i++)
+        for (int i = 0; i < size; i++)
         {
-            country_names[i] = ",";
-            life_expectancy[i] = ",";
+            country_names.push_back(",");
+            life_expectancy.push_back(",");
         }
     }
-    int hash_function(std::string country_name, int size)
+    int hash_function(std::string country_name)
     {
         int index = 0;
         for (char c : country_name)
@@ -31,7 +33,7 @@ public:
         return index % size;
     }
 
-    int collision_resolution(int index, int size)
+    int collision_resolution(int index)
     {
         while (country_names[index] != ",")
         {
@@ -63,7 +65,7 @@ public:
                 }
                 column++;
             }
-            int index = hash_function(country, 389);
+            int index = hash_function(country);
 
             // check if index that a country hashes to is empty
             if (country_names[index] == ",")
@@ -76,17 +78,16 @@ public:
             // index is not empty, which means there is a collision
             else
             {
-                std::cout << "collision" << '\n';
-                int new_index = collision_resolution(index, 389);
+                int new_index = collision_resolution(index);
                 string_lower(country);
                 country_names[new_index] = country;
                 life_expectancy[new_index] = expectancy;
             }
         }
     }
-    std::string find(std::string country_name, int size)
+    std::string find(std::string country_name)
     {
-        int index = hash_function(country_name, size);
+        int index = hash_function(country_name);
         if (country_names[index] == country_name)
         {
             return life_expectancy[index];
@@ -109,7 +110,7 @@ public:
     }
     void print()
     {
-        for (int i = 0; i < 389; i++)
+        for (int i = 0; i < size; i++)
         {
             std::cout << country_names[i] << '\n';
         }
@@ -262,20 +263,21 @@ int main()
         }
     }
 
-    // start measuring time for linear probing
-    auto start = std::chrono::steady_clock::now();
-
     LinearProbing lp;
     lp.hash_country();
     std::string country;
     std::cout << "Enter Country Name: ";
     std::cin >> country;
+
+    // start measuring time for linear probing
+    auto start = std::chrono::steady_clock::now();
+
     lp.string_lower(country);
-    std::string return_value = lp.find(country, 389);
+    std::string return_value = lp.find(country);
 
     // end measuring time for linear probing and calculate the duration between start and end
     auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> duration_linear = end - start;
+    auto duration_linear = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
 
     if (return_value == "0")
     {
@@ -283,21 +285,22 @@ int main()
     }
     else
     {
-        std::cout << "With Linear Probing: " << return_value << '\n';
+        std::cout << "Life Expectancy Value (Linear Probing): " << return_value << '\n';
     }
-    std::cout << "Linear Probing time: " << duration_linear.count() << " seconds" << std::endl;
+    std::cout << "Linear Probing time: " << duration_linear.count() << " nanoseconds" << std::endl;
+
+    QuadraticProbing qp;
+    qp.hash_country();
 
     // start measuring time for quadratic probing
     start = std::chrono::steady_clock::now();
 
-    QuadraticProbing qp;
-    qp.hash_country();
     qp.string_lower(country);
     return_value = qp.find(country);
 
     // end measuring time for quadratic probing and calculate the duration between start and end
     end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> duration_quadratic = end - start;
+    auto duration_quadratic = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
 
     if (return_value == "0")
     {
@@ -305,9 +308,9 @@ int main()
     }
     else
     {
-        std::cout << "With Quadratic Probing: " << return_value << '\n';
+        std::cout << "Life Expectancy Value (Quadratic Probing): " << return_value << '\n';
     }
 
-    std::cout << "Quadratic Probing time: " << duration_quadratic.count() << " seconds" << std::endl;
+    std::cout << "Quadratic Probing time: " << duration_quadratic.count() << " nanoseconds" << std::endl;
     
 }
