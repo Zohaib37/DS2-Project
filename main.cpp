@@ -4,6 +4,7 @@
 #include <sstream>
 #include <chrono>
 #include <vector>
+#include <stdexcept>
 class LinearProbing
 {
 private:
@@ -236,6 +237,130 @@ public:
     }
 };
 
+class CuckooHash {
+private:
+    int size; // size of each hash table
+    std::vector<std::pair<std::string,std::string>> table1;
+    std::vector<std::pair<std::string,std::string>> table2;
+    std::vector<std::pair<std::string,std::string>> entries;
+
+public:
+    CuckooHash(int tablesize)
+    {
+        size = tablesize;
+        // populate both tables with dummy data
+        for (int i = 0; i < size; i++)
+        {
+            table1.push_back(std::make_pair("",""));
+            table2.push_back(std::make_pair("",""));
+        }
+    }
+
+
+    size_t hash1(const std::string& key) const {
+        // Simple hash function based on the sum of ASCII values of characters in the key
+        size_t hashValue = 0;
+        for (char c : key) {
+            hashValue += c;
+        }
+        return hashValue;
+    }
+    // DJBX33A Hash: This is a simple and fast hash function that can be used for strings.
+    size_t hash2(const std::string& key) const {
+        size_t hash = 5381;
+        for (char c : key) {
+            hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+        }
+        return hash;
+    }
+
+    void insert(const std::string& key, const std::string& value) {
+        size_t index1 = hash1(key)%size;
+        size_t index2 = hash2(key)%size;
+        if (table1[index1].first=="") {
+            table1[index1] = std::make_pair(key, value);
+        } else if (table2[index2].first=="") {
+            table2[index2] = std::make_pair(key, value);
+        } else {
+            // If both slots are occupied, perform cuckoo hashing
+            std::pair<std::string,std::string> temp = std::make_pair(key, value);
+            for (int i = 0; i < size; ++i) {
+                // Swap temp with the entry at hash1
+                std::swap(temp, table1[index1]);
+                // Recalculate hash value for temp
+                index1 = hash1(temp.first) % size;
+                // Check if slot at hash1 is available
+                if (table1[index1].first=="") {
+                    table1[index1] = temp;
+                    break;
+                }
+                // Swap temp with the entry at hash2
+                std::swap(temp, table2[index2]);
+                // Recalculate hash value for temp
+                index2 = hash2(temp.first) % size;
+                // Check if slot at hash2 is available
+                if (table2[index2].first=="") {
+                    table2[index2] = temp;
+                    break;
+                }
+            }
+        }
+    }
+
+    void hash_country() {
+        std::ifstream file("Clean File.csv");
+        std::string line;
+        while (getline(file, line)) {
+            std::stringstream ss(line);
+            std::string token, country, expectancy;
+            int column = 0;
+            while (getline(ss, token, ',')) {
+                if (column == 0) {
+                    country = token;
+                } else if (column == 3) {
+                    expectancy = token;
+                }
+                column++;
+            }
+            insert(country, expectancy);
+        }
+    }
+
+    std::string search(const std::string& key) const {
+        size_t index1 = hash1(key)%size;
+        size_t index2 = hash2(key)%size;
+        if (table1[index1].first == key) {
+            return table1[index1].second;
+
+        } else if (table2[index2].first == key) {
+            return table2[index2].second;
+        }
+
+        return "-";
+    }
+
+    void string_lower(std::string &country)
+    {
+        for (char &c : country)
+        {
+            c = std::tolower(c);
+        }
+    }
+
+    void print()
+    {
+        for (int i = 0; i < size; i++)
+        {
+            std::cout << table1[i].first << table1[i].second << '\n';
+        }
+        std::cout << "TABLE2" << '\n';
+        for (int i = 0; i < size; i++)
+        {
+            std::cout << table2[i].first << table2[i].second << '\n';
+        }
+    }
+};
+
 int main()
 {
     // put relevant data in a new file
@@ -269,13 +394,9 @@ int main()
     std::cout << "Enter Country Name: ";
     std::cin >> country;
 
-    // start measuring time for linear probing
     auto start = std::chrono::steady_clock::now();
-
     lp.string_lower(country);
     std::string return_value = lp.find(country);
-
-    // end measuring time for linear probing and calculate the duration between start and end
     auto end = std::chrono::steady_clock::now();
     auto duration_linear = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
 
@@ -291,14 +412,9 @@ int main()
 
     QuadraticProbing qp;
     qp.hash_country();
-
-    // start measuring time for quadratic probing
     start = std::chrono::steady_clock::now();
-
     qp.string_lower(country);
     return_value = qp.find(country);
-
-    // end measuring time for quadratic probing and calculate the duration between start and end
     end = std::chrono::steady_clock::now();
     auto duration_quadratic = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
 
@@ -310,7 +426,20 @@ int main()
     {
         std::cout << "Life Expectancy Value (Quadratic Probing): " << return_value << '\n';
     }
-
     std::cout << "Quadratic Probing time: " << duration_quadratic.count() << " nanoseconds" << std::endl;
-    
+
+    CuckooHash ch(193);
+    ch.hash_country();
+    start = std::chrono::steady_clock::now();
+    std::string life_expectancy;
+    life_expectancy = ch.search(country);
+    end = std::chrono::steady_clock::now();
+    auto duration_cuckoo = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+
+    if (return_value!= "-")
+    {
+        std::cout << "Life Expectancy Value (Cuckoo Hashing): " << return_value << '\n';
+    }
+
+    std::cout << "Cuckoo Hashing time: " << duration_cuckoo.count() << " nanoseconds" << std::endl;
 }
