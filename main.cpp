@@ -277,35 +277,44 @@ public:
     void insert(const std::string& key, const std::string& value) {
         size_t index1 = hash1(key)%size;
         size_t index2 = hash2(key)%size;
-        if (table1[index1].first=="") {
-            table1[index1] = std::make_pair(key, value);
-        } else if (table2[index2].first=="") {
-            table2[index2] = std::make_pair(key, value);
-        } else {
-            // If both slots are occupied, perform cuckoo hashing
-            std::pair<std::string,std::string> temp = std::make_pair(key, value);
-            for (int i = 0; i < size; ++i) {
-                // Swap temp with the entry at hash1
+        std::pair<std::string,std::string> temp = std::make_pair(key, value);
+
+        int rehashAttempts = 0;
+        while (rehashAttempts < MAX_REHASH_ATTEMPTS) {
+            if (table1[index1].first=="") {
+                table1[index1] = temp;
+                return;
+            } else {
                 std::swap(temp, table1[index1]);
-                // Recalculate hash value for temp
                 index1 = hash1(temp.first) % size;
-                // Check if slot at hash1 is available
-                if (table1[index1].first=="") {
-                    table1[index1] = temp;
-                    break;
-                }
-                // Swap temp with the entry at hash2
-                std::swap(temp, table2[index2]);
-                // Recalculate hash value for temp
-                index2 = hash2(temp.first) % size;
-                // Check if slot at hash2 is available
-                if (table2[index2].first=="") {
-                    table2[index2] = temp;
-                    break;
-                }
             }
+
+            if (table2[index2].first=="") {
+                table2[index2] = temp;
+                return;
+            } else {
+                std::swap(temp, table2[index2]);
+                index2 = hash2(temp.first) % size;
+            }
+            rehashAttempts++;
         }
     }
+
+    void rehash() {
+        size *= 2; // Double the size of the tables
+        std::vector<std::pair<std::string,std::string>> newTable1(size, std::make_pair("",""));
+        std::vector<std::pair<std::string,std::string>> newTable2(size, std::make_pair("",""));
+
+        // Reinsert all entries
+        for (const auto& entry : entries) {
+            insert(entry.first, entry.second);
+        }
+
+        // Update tables
+        table1 = std::move(newTable1);
+        table2 = std::move(newTable2);
+    }
+
 
     void hash_country() {
         std::ifstream file("Clean File.csv");
