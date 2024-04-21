@@ -128,9 +128,13 @@ public:
 class QuadraticProbing
 {
 private:
-    static const int table_size = 389; // Size of the hash table
-    std::string country_names[table_size];
-    std::string life_expectancy[table_size];
+    std::vector<std::string> country_names;
+    std::vector<std::string> life_expectancy;
+    int table_size = 193;
+
+    // std::string country_names[389];
+    // std::string life_expectancy[389];
+    // int table_size = 389;
 
 public:
     QuadraticProbing()
@@ -138,8 +142,8 @@ public:
         // Initialize arrays with dummy data
         for (int i = 0; i < table_size; i++)
         {
-            country_names[i] = ",";
-            life_expectancy[i] = ",";
+            country_names.push_back(",");
+            life_expectancy.push_back(",");
         }
     }
 
