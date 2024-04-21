@@ -132,10 +132,6 @@ private:
     std::vector<std::string> life_expectancy;
     int table_size = 193;
 
-    // std::string country_names[389];
-    // std::string life_expectancy[389];
-    // int table_size = 389;
-
 public:
     QuadraticProbing()
     {
