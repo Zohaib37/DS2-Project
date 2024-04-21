@@ -307,6 +307,22 @@ public:
         }
     }
 
+    void remove(const std::string& key) {
+        size_t index1 = hash1(key) % size;
+        size_t index2 = hash2(key) % size;
+    
+        if (table1[index1].first == key) {
+            table1[index1] = std::make_pair("", ""); 
+            return; 
+        }
+    
+        if (table2[index2].first == key) {
+            table2[index2] = std::make_pair("", ""); 
+            return; 
+        }
+
+    }
+
     void hash_country() {
         std::ifstream file("Clean File.csv");
         std::string line;
