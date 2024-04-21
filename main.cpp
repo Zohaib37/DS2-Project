@@ -352,11 +352,28 @@ public:
         for (int i = 0; i < size; i++)
         {
             std::cout << table1[i].first << table1[i].second << '\n';
+            std::cout << "------------------------------------------------------------------------------------------"<<'\n';
         }
         std::cout << "TABLE2" << '\n';
         for (int i = 0; i < size; i++)
         {
             std::cout << table2[i].first << table2[i].second << '\n';
+            std::cout << "------------------------------------------------------------------------------------------"<<'\n';
+        }
+    }
+
+    void remove(const std::string& key) {
+        size_t index1 = hash1(key) % size;
+        size_t index2 = hash2(key) % size;
+
+        if (table1[index1].first == key) {
+            table1[index1] = std::make_pair("", ""); 
+            return; 
+        }
+
+        if (table2[index2].first == key) {
+            table2[index2] = std::make_pair("", ""); 
+            return; 
         }
     }
 };
@@ -409,7 +426,7 @@ int main()
         std::cout << "Life Expectancy Value (Linear Probing): " << return_value << '\n';
     }
     std::cout << "Linear Probing time: " << duration_linear.count() << " nanoseconds" << std::endl;
-
+    std::cout << "------------------------------------------------------------------------------------------"<<'\n';
     QuadraticProbing qp;
     qp.hash_country();
     start = std::chrono::steady_clock::now();
@@ -427,7 +444,7 @@ int main()
         std::cout << "Life Expectancy Value (Quadratic Probing): " << return_value << '\n';
     }
     std::cout << "Quadratic Probing time: " << duration_quadratic.count() << " nanoseconds" << std::endl;
-
+    std::cout << "------------------------------------------------------------------------------------------"<<'\n';
     CuckooHash ch(193);
     ch.hash_country();
     start = std::chrono::steady_clock::now();
@@ -440,6 +457,7 @@ int main()
     {
         std::cout << "Life Expectancy Value (Cuckoo Hashing): " << return_value << '\n';
     }
-
     std::cout << "Cuckoo Hashing time: " << duration_cuckoo.count() << " nanoseconds" << std::endl;
+    std::cout << "------------------------------------------------------------------------------------------"<<'\n';
+
 }
