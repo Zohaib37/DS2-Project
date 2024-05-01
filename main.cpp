@@ -243,6 +243,7 @@ private:
     std::vector<std::pair<std::string,std::string>> table1;
     std::vector<std::pair<std::string,std::string>> table2;
     std::vector<std::pair<std::string,std::string>> entries;
+    int MAX_REHASH_ATTEMPTS = 10;
 
 public:
     CuckooHash(int tablesize)
